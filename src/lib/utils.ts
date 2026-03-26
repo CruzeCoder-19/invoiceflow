@@ -1,0 +1,57 @@
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { format } from "date-fns";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export function formatCurrency(amount: number | string, currency = "USD"): string {
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+  }).format(num);
+}
+
+export function formatDate(date: Date | string, fmt = "MMM dd, yyyy"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return format(d, fmt);
+}
+
+export function generateInvoiceNumber(lastNumber?: string | null): string {
+  if (!lastNumber) return "INV-0001";
+  const match = lastNumber.match(/INV-(\d+)/);
+  if (!match) return "INV-0001";
+  const next = parseInt(match[1], 10) + 1;
+  return `INV-${String(next).padStart(4, "0")}`;
+}
+
+export interface InvoiceItemInput {
+  quantity: number;
+  rate: number;
+}
+
+export function calculateTotals(
+  items: InvoiceItemInput[],
+  taxRate: number,
+  discount: number
+): { subtotal: number; taxAmount: number; total: number } {
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+  const discountedSubtotal = subtotal - discount;
+  const taxAmount = (discountedSubtotal * taxRate) / 100;
+  const total = discountedSubtotal + taxAmount;
+  return { subtotal, taxAmount, total: Math.max(0, total) };
+}
+
+export function getStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    DRAFT: "bg-gray-100 text-gray-700",
+    SENT: "bg-blue-100 text-blue-700",
+    PAID: "bg-green-100 text-green-700",
+    OVERDUE: "bg-red-100 text-red-700",
+    CANCELLED: "bg-yellow-100 text-yellow-700",
+  };
+  return colors[status] ?? "bg-gray-100 text-gray-700";
+}
