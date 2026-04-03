@@ -23,8 +23,11 @@ export default async function DashboardPage() {
     prisma.client.count({ where: { userId } }),
   ]);
 
-  const sumTotal = (list: typeof invoices) =>
-    list.reduce<number>((s, inv) => s + Number(inv.total), 0);
+  const sumTotal = (list: typeof invoices): number => {
+    let sum = 0;
+    for (const inv of list) sum += Number(inv.total);
+    return sum;
+  };
 
   const stats: DashboardStats = {
     totalRevenue: sumTotal(invoices),
