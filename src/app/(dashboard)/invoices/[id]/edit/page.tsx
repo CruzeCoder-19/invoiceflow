@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { InvoiceForm } from "@/components/invoices/InvoiceForm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { serialize } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -38,7 +39,7 @@ export default async function EditInvoicePage({ params }: PageProps) {
         <span className="text-sm font-medium text-gray-900">Edit</span>
       </div>
       <h1 className="text-2xl font-bold text-gray-900">Edit Invoice</h1>
-      <InvoiceForm clients={clients} invoice={invoice} mode="edit" />
+      <InvoiceForm clients={serialize(clients)} invoice={serialize(invoice)} mode="edit" />
     </div>
   );
 }

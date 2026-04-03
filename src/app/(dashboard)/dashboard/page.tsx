@@ -6,6 +6,7 @@ import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { RecentInvoices } from "@/components/dashboard/RecentInvoices";
 import { startOfMonth, subMonths, format } from "date-fns";
 import type { DashboardStats, MonthlyRevenue, InvoiceWithDetails } from "@/types";
+import { serialize } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard — InvoiceFlow" };
 
@@ -23,10 +24,10 @@ export default async function DashboardPage() {
   ]);
 
   const stats: DashboardStats = {
-    totalRevenue: invoices.reduce((s, i) => s + Number(i.total), 0),
-    paidAmount: invoices.filter((i) => i.status === "PAID").reduce((s, i) => s + Number(i.total), 0),
-    outstandingAmount: invoices.filter((i) => i.status === "SENT").reduce((s, i) => s + Number(i.total), 0),
-    overdueAmount: invoices.filter((i) => i.status === "OVERDUE").reduce((s, i) => s + Number(i.total), 0),
+    totalRevenue: invoices.reduce((s: number, i) => s + Number(i.total), 0),
+    paidAmount: invoices.filter((i) => i.status === "PAID").reduce((s: number, i) => s + Number(i.total), 0),
+    outstandingAmount: invoices.filter((i) => i.status === "SENT").reduce((s: number, i) => s + Number(i.total), 0),
+    overdueAmount: invoices.filter((i) => i.status === "OVERDUE").reduce((s: number, i) => s + Number(i.total), 0),
     totalInvoices: invoices.length,
     totalClients: clientCount,
   };
@@ -40,8 +41,8 @@ export default async function DashboardPage() {
     );
     monthlyRevenue.push({
       month: format(monthStart, "MMM yy"),
-      revenue: monthInvoices.reduce((s, i) => s + Number(i.total), 0),
-      paid: monthInvoices.filter((i) => i.status === "PAID").reduce((s, i) => s + Number(i.total), 0),
+      revenue: monthInvoices.reduce((s: number, i) => s + Number(i.total), 0),
+      paid: monthInvoices.filter((i) => i.status === "PAID").reduce((s: number, i) => s + Number(i.total), 0),
     });
   }
 
@@ -77,7 +78,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <RecentInvoices invoices={recentInvoices} />
+      <RecentInvoices invoices={serialize(recentInvoices)} />
     </div>
   );
 }

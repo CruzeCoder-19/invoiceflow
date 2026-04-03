@@ -45,6 +45,31 @@ export function calculateTotals(
   return { subtotal, taxAmount, total: Math.max(0, total) };
 }
 
+/**
+ * Recursively converts Prisma Decimal objects and Date objects to plain
+ * serializable values (number / string) so they can safely cross the
+ * Server-Component → Client-Component boundary in Next.js.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function serialize<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "bigint") return Number(obj) as unknown as T;
+  if (obj instanceof Date) return obj.toISOString() as unknown as T;
+  // Prisma Decimal has a toNumber() method
+  if (typeof obj === "object" && "toNumber" in obj && typeof (obj as Record<string, unknown>).toNumber === "function") {
+    return (obj as unknown as { toNumber(): number }).toNumber() as unknown as T;
+  }
+  if (Array.isArray(obj)) return obj.map(serialize) as unknown as T;
+  if (typeof obj === "object") {
+    const plain: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      plain[key] = serialize(value);
+    }
+    return plain as T;
+  }
+  return obj;
+}
+
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     DRAFT: "bg-gray-100 text-gray-700",

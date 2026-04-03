@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { InvoiceWithDetails } from "@/types";
 import type { InvoiceStatus } from "@prisma/client";
+import { serialize } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Invoices — InvoiceFlow" };
 
@@ -65,7 +66,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
       </div>
 
       <Card>
-        <InvoiceTable invoices={invoices as InvoiceWithDetails[]} />
+        <InvoiceTable invoices={serialize(invoices) as InvoiceWithDetails[]} />
       </Card>
     </div>
   );
