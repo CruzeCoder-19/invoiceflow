@@ -23,26 +23,29 @@ export default async function DashboardPage() {
     prisma.client.count({ where: { userId } }),
   ]);
 
+  const sumTotal = (list: typeof invoices) =>
+    list.reduce<number>((s, inv) => s + Number(inv.total), 0);
+
   const stats: DashboardStats = {
-    totalRevenue: invoices.reduce((s: number, i) => s + Number(i.total), 0),
-    paidAmount: invoices.filter((i) => i.status === "PAID").reduce((s: number, i) => s + Number(i.total), 0),
-    outstandingAmount: invoices.filter((i) => i.status === "SENT").reduce((s: number, i) => s + Number(i.total), 0),
-    overdueAmount: invoices.filter((i) => i.status === "OVERDUE").reduce((s: number, i) => s + Number(i.total), 0),
+    totalRevenue: sumTotal(invoices),
+    paidAmount: sumTotal(invoices.filter((i) => i.status === "PAID")),
+    outstandingAmount: sumTotal(invoices.filter((i) => i.status === "SENT")),
+    overdueAmount: sumTotal(invoices.filter((i) => i.status === "OVERDUE")),
     totalInvoices: invoices.length,
     totalClients: clientCount,
   };
 
   const monthlyRevenue: MonthlyRevenue[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const monthStart = startOfMonth(subMonths(new Date(), i));
-    const monthEnd = startOfMonth(subMonths(new Date(), i - 1));
+  for (let idx = 5; idx >= 0; idx--) {
+    const monthStart = startOfMonth(subMonths(new Date(), idx));
+    const monthEnd = startOfMonth(subMonths(new Date(), idx - 1));
     const monthInvoices = invoices.filter(
       (inv) => inv.createdAt >= monthStart && inv.createdAt < monthEnd
     );
     monthlyRevenue.push({
       month: format(monthStart, "MMM yy"),
-      revenue: monthInvoices.reduce((s: number, i) => s + Number(i.total), 0),
-      paid: monthInvoices.filter((i) => i.status === "PAID").reduce((s: number, i) => s + Number(i.total), 0),
+      revenue: sumTotal(monthInvoices),
+      paid: sumTotal(monthInvoices.filter((inv) => inv.status === "PAID")),
     });
   }
 
