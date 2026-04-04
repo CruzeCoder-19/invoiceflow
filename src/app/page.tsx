@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Zap, FileText, Users, BarChart2, Download, Shield, ArrowRight, CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "InvoiceFlow — Invoice Smarter, Get Paid Faster",
+  title: "InvoiceDo — Invoice Smarter, Get Paid Faster",
   description: "Create professional invoices, manage clients, and track payments — all in one place.",
 };
 
@@ -57,7 +57,7 @@ export default function LandingPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
               <Zap className="h-4 w-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-gray-900">InvoiceFlow</span>
+            <span className="text-lg font-bold text-gray-900">InvoiceDo</span>
           </div>
           <div className="flex items-center gap-3">
             <Link
@@ -89,7 +89,7 @@ export default function LandingPage() {
             </span>
           </h1>
           <p className="mt-5 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            InvoiceFlow lets you create professional invoices, manage clients, and track revenue —
+            InvoiceDo lets you create professional invoices, manage clients, and track revenue —
             all from a clean, fast dashboard.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -163,7 +163,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} InvoiceFlow. Built with Next.js, Prisma & Tailwind CSS.
+        © {new Date().getFullYear()} InvoiceDo. Built with Next.js, Prisma & Tailwind CSS.
       </footer>
     </div>
   );

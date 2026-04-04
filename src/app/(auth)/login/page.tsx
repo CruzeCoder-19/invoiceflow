@@ -102,7 +102,7 @@ export default function LoginPage() {
             <Zap className="h-5 w-5 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-sm text-gray-500">Sign in to your InvoiceFlow account</p>
+          <p className="text-sm text-gray-500">Sign in to your InvoiceDo account</p>
         </div>
 
         <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-gray-200" />}>

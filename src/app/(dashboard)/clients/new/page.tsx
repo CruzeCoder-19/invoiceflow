@@ -3,7 +3,7 @@ import { ClientForm } from "@/components/clients/ClientForm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-export const metadata: Metadata = { title: "Add Client — InvoiceFlow" };
+export const metadata: Metadata = { title: "Add Client — InvoiceDo" };
 
 export default function NewClientPage() {
   return (

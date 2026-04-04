@@ -136,7 +136,7 @@ export function InvoicePDFDocument({ invoice }: InvoicePDFProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.logo}>{user?.company ?? "InvoiceFlow"}</Text>
+            <Text style={styles.logo}>{user?.company ?? "InvoiceDo"}</Text>
             {user && (
               <Text style={styles.companyInfo}>
                 {[user.address, user.city, user.state, user.country]

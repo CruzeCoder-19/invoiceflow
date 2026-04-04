@@ -10,7 +10,7 @@ import type { InvoiceWithDetails } from "@/types";
 import type { InvoiceStatus } from "@prisma/client";
 import { serialize } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Invoices — InvoiceFlow" };
+export const metadata: Metadata = { title: "Invoices — InvoiceDo" };
 
 const STATUSES = ["ALL", "DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as const;
 

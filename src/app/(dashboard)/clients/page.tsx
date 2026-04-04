@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { ClientWithStats } from "@/types";
 
-export const metadata: Metadata = { title: "Clients — InvoiceFlow" };
+export const metadata: Metadata = { title: "Clients — InvoiceDo" };
 
 export default async function ClientsPage() {
   const session = await auth();

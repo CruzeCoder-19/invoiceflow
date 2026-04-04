@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "New Invoice — InvoiceFlow" };
+export const metadata: Metadata = { title: "New Invoice — InvoiceDo" };
 
 export default async function NewInvoicePage() {
   const session = await auth();

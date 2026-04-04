@@ -66,7 +66,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
           <div className="flex items-start justify-between mb-8">
             <div>
               <p className="text-2xl font-bold text-indigo-600">
-                {invoice.user?.company ?? "InvoiceFlow"}
+                {invoice.user?.company ?? "InvoiceDo"}
               </p>
               {invoice.user && (
                 <p className="text-sm text-gray-500 mt-1">

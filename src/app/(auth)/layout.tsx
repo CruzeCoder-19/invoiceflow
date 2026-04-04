@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "InvoiceFlow — Sign In",
+  title: "InvoiceDo — Sign In",
 };
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {

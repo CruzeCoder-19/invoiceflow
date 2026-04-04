@@ -7,8 +7,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "InvoiceFlow — Professional Invoice Management",
-  description: "Create, send, and manage invoices with ease. Get paid faster with InvoiceFlow.",
+  title: "InvoiceDo — Professional Invoice Management",
+  description: "Create, send, and manage invoices with ease. Get paid faster with InvoiceDo.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

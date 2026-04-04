@@ -8,7 +8,7 @@ import { startOfMonth, subMonths, format } from "date-fns";
 import type { DashboardStats, MonthlyRevenue, InvoiceWithDetails } from "@/types";
 import { serialize } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Dashboard — InvoiceFlow" };
+export const metadata: Metadata = { title: "Dashboard — InvoiceDo" };
 
 export default async function DashboardPage() {
   const session = await auth();
