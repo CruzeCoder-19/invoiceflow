@@ -11,6 +11,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
  * layers on the PrismaAdapter and overrides the authorize logic.
  */
 export default {
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
