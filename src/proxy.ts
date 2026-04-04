@@ -1,6 +1,10 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import authConfig from "@/lib/auth.config";
+
+// Use only the edge-safe auth config (no Prisma) for middleware
+const { auth } = NextAuth(authConfig);
 
 export default auth((req: NextRequest & { auth: unknown }) => {
   const isLoggedIn = !!(req as { auth: unknown }).auth;
