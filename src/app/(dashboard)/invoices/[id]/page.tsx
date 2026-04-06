@@ -65,6 +65,13 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
           {/* Header */}
           <div className="flex items-start justify-between mb-8">
             <div>
+              {invoice.user?.logoUrl && (
+                <img
+                  src={invoice.user.logoUrl}
+                  alt={`${invoice.user.company ?? "Company"} logo`}
+                  className="max-h-20 w-auto object-contain mb-3"
+                />
+              )}
               <p className="text-2xl font-bold text-indigo-600">
                 {invoice.user?.company ?? "InvoiceDo"}
               </p>

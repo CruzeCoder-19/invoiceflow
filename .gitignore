@@ -45,3 +45,7 @@ AGENTS.md
 CLAUDE.md
 
 /src/generated/prisma
+
+# Local Netlify folder
+.netlify
+deno.lock

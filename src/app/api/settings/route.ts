@@ -12,7 +12,17 @@ const settingsSchema = z.object({
   state: z.string().optional(),
   zip: z.string().optional(),
   country: z.string().optional(),
-  logoUrl: z.string().url().optional().or(z.literal("")),
+  logoUrl: z
+    .string()
+    .nullish()
+    .refine(
+      (val) =>
+        !val ||
+        val === "" ||
+        val.startsWith("/api/logo?key=") ||
+        /^https?:\/\//.test(val),
+      { message: "Invalid logo URL" }
+    ),
 });
 
 export async function PUT(req: NextRequest) {

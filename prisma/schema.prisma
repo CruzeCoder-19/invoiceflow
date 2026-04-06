@@ -100,7 +100,7 @@ enum InvoiceStatus {
 
 model Invoice {
   id            String        @id @default(cuid())
-  invoiceNumber String        @unique
+  invoiceNumber String
   userId        String
   clientId      String
   status        InvoiceStatus @default(DRAFT)
@@ -119,6 +119,8 @@ model Invoice {
   user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   client Client        @relation(fields: [clientId], references: [id])
   items  InvoiceItem[]
+
+  @@unique([userId, invoiceNumber])
 }
 
 model InvoiceItem {

@@ -3,6 +3,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { Invoice, InvoiceItem, Client, User } from "@prisma/client";
@@ -13,6 +14,7 @@ interface InvoicePDFProps {
     client: Client;
     user: User | null;
   };
+  logoDataUrl?: string | null;
 }
 
 const styles = StyleSheet.create({
@@ -30,6 +32,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logo: { fontSize: 22, fontFamily: "Helvetica-Bold", color: "#4f46e5" },
+  logoImage: { width: 80, height: 80, objectFit: "contain", marginBottom: 8 },
   companyInfo: { fontSize: 9, color: "#6b7280", lineHeight: 1.6 },
   invoiceTitle: {
     fontSize: 28,
@@ -127,7 +130,7 @@ function formatDate(date: Date | string) {
   });
 }
 
-export function InvoicePDFDocument({ invoice }: InvoicePDFProps) {
+export function InvoicePDFDocument({ invoice, logoDataUrl }: InvoicePDFProps) {
   const { client, user, items } = invoice;
 
   return (
@@ -136,6 +139,9 @@ export function InvoicePDFDocument({ invoice }: InvoicePDFProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
+            {logoDataUrl && (
+              <Image src={logoDataUrl} style={styles.logoImage} />
+            )}
             <Text style={styles.logo}>{user?.company ?? "InvoiceDo"}</Text>
             {user && (
               <Text style={styles.companyInfo}>

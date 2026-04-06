@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getLogoBuffer } from "@/lib/netlify-blob";
 
 export async function GET(
   _req: NextRequest,
@@ -22,14 +23,26 @@ export async function GET(
     return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
   }
 
+  let logoDataUrl: string | null = null;
+  if (invoice.user?.logoUrl) {
+    try {
+      const logoResult = await getLogoBuffer(invoice.user.logoUrl);
+      if (logoResult) {
+        logoDataUrl = `data:${logoResult.contentType};base64,${Buffer.from(logoResult.buffer).toString("base64")}`;
+      }
+    } catch (err) {
+      console.error("Failed to load logo for PDF, continuing without it:", err);
+    }
+  }
+
   // Dynamically import to avoid bundler issues with ESM package
   const { renderToBuffer } = await import("@react-pdf/renderer");
   const React = await import("react");
   const { InvoicePDFDocument } = await import("@/components/invoices/InvoicePDF");
 
   const element = React.createElement(
-    InvoicePDFDocument as React.ComponentType<{ invoice: typeof invoice }>,
-    { invoice }
+    InvoicePDFDocument as React.ComponentType<{ invoice: typeof invoice; logoDataUrl?: string | null }>,
+    { invoice, logoDataUrl }
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
