@@ -50,8 +50,8 @@ export default function SettingsPage() {
       e.target.value = "";
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("File size must be under 2 MB");
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("File size must be under 1 MB");
       e.target.value = "";
       return;
     }
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                   >
                     Choose file
                   </Button>
-                  <p className="text-sm text-gray-500">JPEG, PNG, or WebP · max 2 MB</p>
+                  <p className="text-sm text-gray-500">JPEG, PNG, or WebP · max 1 MB</p>
                 </div>
               )}
             </div>

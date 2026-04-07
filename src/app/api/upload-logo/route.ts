@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import path from "path";
+import sharp from "sharp";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { uploadLogo, deleteLogo } from "@/lib/netlify-blob";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
+const MAX_SIZE = 1 * 1024 * 1024; // 1 MB
+const COMPRESSION_THRESHOLD_BYTES = 300 * 1024; // 300 KB
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -28,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   if (file.size > MAX_SIZE) {
     return NextResponse.json(
-      { error: "File too large. Maximum size is 2 MB." },
+      { error: "File too large. Maximum size is 1 MB." },
       { status: 400 }
     );
   }
@@ -48,7 +51,36 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const logoUrl = await uploadLogo(file, session.user.id);
+    const originalBuffer = Buffer.from(await file.arrayBuffer());
+
+    let finalBuffer: Buffer;
+    let finalContentType: string;
+    let finalFilename: string;
+
+    if (originalBuffer.length <= COMPRESSION_THRESHOLD_BYTES) {
+      // Small enough — store as-is to preserve original quality
+      finalBuffer = originalBuffer;
+      finalContentType = file.type;
+      finalFilename = file.name;
+    } else {
+      // Too large — resize and compress with sharp
+      try {
+        finalBuffer = await sharp(originalBuffer)
+          .resize({ width: 400, height: 400, fit: "inside", withoutEnlargement: true })
+          .png({ quality: 85, compressionLevel: 9 })
+          .toBuffer();
+        finalContentType = "image/png";
+        finalFilename = `${path.parse(file.name).name}.png`;
+      } catch (sharpErr) {
+        console.error("Sharp processing failed:", sharpErr);
+        return NextResponse.json(
+          { error: "Failed to process image — please try a different file" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const logoUrl = await uploadLogo(finalBuffer, finalFilename, finalContentType, session.user.id);
     await prisma.user.update({
       where: { id: session.user.id },
       data: { logoUrl },

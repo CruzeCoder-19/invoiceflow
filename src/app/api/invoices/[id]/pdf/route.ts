@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getLogoBuffer } from "@/lib/netlify-blob";
@@ -28,10 +29,14 @@ export async function GET(
     try {
       const logoResult = await getLogoBuffer(invoice.user.logoUrl);
       if (logoResult) {
-        logoDataUrl = `data:${logoResult.contentType};base64,${Buffer.from(logoResult.buffer).toString("base64")}`;
+        const resizedBuffer = await sharp(Buffer.from(logoResult.buffer))
+          .resize({ width: 200, height: 200, fit: "inside", withoutEnlargement: true })
+          .png({ quality: 80 })
+          .toBuffer();
+        logoDataUrl = `data:image/png;base64,${resizedBuffer.toString("base64")}`;
       }
     } catch (err) {
-      console.error("Failed to load logo for PDF, continuing without it:", err);
+      console.error("Failed to load/process logo for PDF, continuing without it:", err);
     }
   }
 

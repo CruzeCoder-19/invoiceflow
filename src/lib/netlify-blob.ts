@@ -1,12 +1,15 @@
 import { getStore } from "@netlify/blobs";
 
-export async function uploadLogo(file: File, userId: string): Promise<string> {
+export async function uploadLogo(
+  buffer: Buffer,
+  filename: string,
+  contentType: string,
+  userId: string
+): Promise<string> {
   const store = getStore("company-logos");
-  const key = `${userId}/${Date.now()}-${file.name}`;
-  const arrayBuffer = await file.arrayBuffer();
-  await store.set(key, arrayBuffer, {
-    metadata: { contentType: file.type },
-  });
+  const key = `${userId}/${Date.now()}-${filename}`;
+  const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+  await store.set(key, arrayBuffer, { metadata: { contentType } });
   return `/api/logo?key=${encodeURIComponent(key)}`;
 }
 
