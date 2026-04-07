@@ -1,5 +1,6 @@
 import {
   Document,
+  Font,
   Page,
   Text,
   View,
@@ -7,6 +8,15 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { Invoice, InvoiceItem, Client, User } from "@prisma/client";
+import path from "path";
+
+Font.register({
+  family: "NotoSans",
+  fonts: [
+    { src: path.join(process.cwd(), "public/fonts/NotoSans-Regular.ttf"), fontWeight: "normal" },
+    { src: path.join(process.cwd(), "public/fonts/NotoSans-Bold.ttf"), fontWeight: "bold" },
+  ],
+});
 
 interface InvoicePDFProps {
   invoice: Invoice & {
@@ -19,7 +29,7 @@ interface InvoicePDFProps {
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSans",
     fontSize: 10,
     paddingTop: 40,
     paddingBottom: 40,
@@ -31,12 +41,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 32,
   },
-  logo: { fontSize: 22, fontFamily: "Helvetica-Bold", color: "#4f46e5" },
+  logo: { fontSize: 22, fontFamily: "NotoSans", fontWeight: "bold", color: "#4f46e5" },
   logoImage: { width: 80, height: 80, objectFit: "contain", marginBottom: 8 },
   companyInfo: { fontSize: 9, color: "#6b7280", lineHeight: 1.6 },
   invoiceTitle: {
     fontSize: 28,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans", fontWeight: "bold",
     color: "#111827",
     marginBottom: 4,
   },
@@ -44,7 +54,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: 20 },
   sectionTitle: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans", fontWeight: "bold",
     color: "#9ca3af",
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -52,10 +62,10 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: "row", justifyContent: "space-between" },
   billTo: { fontSize: 10, color: "#374151", lineHeight: 1.7 },
-  billToName: { fontFamily: "Helvetica-Bold", fontSize: 11, color: "#111827" },
+  billToName: { fontFamily: "NotoSans", fontWeight: "bold", fontSize: 11, color: "#111827" },
   metaRow: { flexDirection: "row", marginBottom: 4 },
   metaLabel: { fontSize: 9, color: "#9ca3af", width: 80 },
-  metaValue: { fontSize: 9, color: "#374151", fontFamily: "Helvetica-Bold" },
+  metaValue: { fontSize: 9, color: "#374151", fontFamily: "NotoSans", fontWeight: "bold" },
   divider: { borderBottomWidth: 1, borderBottomColor: "#e5e7eb", marginVertical: 16 },
   tableHeader: {
     flexDirection: "row",
@@ -67,7 +77,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderText: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans", fontWeight: "bold",
     color: "#6b7280",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -89,7 +99,7 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 10, color: "#374151", width: 80, textAlign: "right" },
   grandTotalLabel: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans", fontWeight: "bold",
     color: "#111827",
     width: 120,
     textAlign: "right",
@@ -97,7 +107,7 @@ const styles = StyleSheet.create({
   },
   grandTotalValue: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans", fontWeight: "bold",
     color: "#4f46e5",
     width: 80,
     textAlign: "right",
@@ -112,13 +122,15 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginTop: 8,
   },
-  statusText: { fontSize: 9, fontFamily: "Helvetica-Bold", color: "#059669" },
+  statusText: { fontSize: 9, fontFamily: "NotoSans", fontWeight: "bold", color: "#059669" },
 });
 
 function formatMoney(amount: number | string) {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(Number(amount));
 }
 

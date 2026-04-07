@@ -168,7 +168,7 @@ export function InvoiceForm({ clients, invoice, mode }: InvoiceFormProps) {
             onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
           />
           <Input
-            label="Discount ($)"
+            label="Discount (₹)"
             type="number"
             min="0"
             step="0.01"
@@ -230,7 +230,7 @@ export function InvoiceForm({ clients, invoice, mode }: InvoiceFormProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Rate ($)</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Rate (₹)</label>
                     <input
                       type="number"
                       min="0"

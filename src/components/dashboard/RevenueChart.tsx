@@ -18,8 +18,8 @@ interface RevenueChartProps {
 }
 
 function formatYAxis(value: number) {
-  if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-  return `$${value}`;
+  if (value >= 1000) return `₹${(value / 1000).toFixed(0)}k`;
+  return `₹${value}`;
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
@@ -44,7 +44,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
             />
             <Tooltip
               formatter={(value) =>
-                new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value ?? 0))
+                new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value ?? 0))
               }
               contentStyle={{
                 borderRadius: "8px",
