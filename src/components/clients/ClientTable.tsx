@@ -84,18 +84,18 @@ export function ClientTable({ clients }: ClientTableProps) {
                 </Link>
               </td>
               <td className="px-4 py-3">
-                <div className="flex items-center justify-end gap-1">
+                <div className="flex items-center justify-end gap-1.5">
                   <Link href={`/clients/${client.id}/edit`}>
-                    <button className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                      <Edit className="h-3.5 w-3.5" />
+                    <button className="p-2 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                      <Edit className="h-4 w-4" />
                     </button>
                   </Link>
                   <button
                     onClick={() => handleDelete(client.id, client.name)}
                     disabled={deleting === client.id}
-                    className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className="p-2 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </td>

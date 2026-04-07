@@ -61,7 +61,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
 
       {/* Invoice Card */}
       <Card>
-        <CardContent className="p-8">
+        <CardContent className="p-4 sm:p-8">
           {/* Header */}
           <div className="flex items-start justify-between mb-8">
             <div>
@@ -93,7 +93,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
           </div>
 
           {/* Bill To + Dates */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
                 Bill To
@@ -129,30 +129,32 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
           </div>
 
           {/* Items */}
-          <table className="w-full text-sm mb-6">
-            <thead>
-              <tr className="border-y border-gray-200 bg-gray-50">
-                <th className="text-left py-2.5 px-3 font-semibold text-gray-600">Description</th>
-                <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-16">Qty</th>
-                <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-28">Rate</th>
-                <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-28">Amount</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {invoice.items.map((item) => (
-                <tr key={item.id}>
-                  <td className="py-3 px-3 text-gray-700">{item.description}</td>
-                  <td className="py-3 px-3 text-right text-gray-600">{item.quantity}</td>
-                  <td className="py-3 px-3 text-right text-gray-600">{formatCurrency(Number(item.rate))}</td>
-                  <td className="py-3 px-3 text-right font-medium text-gray-900">{formatCurrency(Number(item.amount))}</td>
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <table className="w-full text-sm mb-6">
+              <thead>
+                <tr className="border-y border-gray-200 bg-gray-50">
+                  <th className="text-left py-2.5 px-3 font-semibold text-gray-600">Description</th>
+                  <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-16">Qty</th>
+                  <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-28">Rate</th>
+                  <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-28">Amount</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {invoice.items.map((item) => (
+                  <tr key={item.id}>
+                    <td className="py-3 px-3 text-gray-700">{item.description}</td>
+                    <td className="py-3 px-3 text-right text-gray-600">{item.quantity}</td>
+                    <td className="py-3 px-3 text-right text-gray-600">{formatCurrency(Number(item.rate))}</td>
+                    <td className="py-3 px-3 text-right font-medium text-gray-900">{formatCurrency(Number(item.amount))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* Totals */}
           <div className="flex justify-end">
-            <div className="w-56 space-y-1.5 text-sm">
+            <div className="w-full sm:w-56 sm:ml-auto space-y-1.5 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
                 <span>{formatCurrency(Number(invoice.subtotal))}</span>

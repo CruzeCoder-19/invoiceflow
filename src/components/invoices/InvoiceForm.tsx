@@ -131,13 +131,15 @@ export function InvoiceForm({ clients, invoice, mode }: InvoiceFormProps) {
       <Card>
         <CardHeader title="Invoice Details" />
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Select
-            label="Client *"
-            options={clientOptions}
-            placeholder="Select a client"
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-          />
+          <div className="min-w-0">
+            <Select
+              label="Client *"
+              options={clientOptions}
+              placeholder="Select a client"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+            />
+          </div>
           <Select
             label="Status"
             options={statusOptions}
@@ -188,7 +190,71 @@ export function InvoiceForm({ clients, invoice, mode }: InvoiceFormProps) {
           }
         />
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Mobile: stacked cards (hidden sm and up) */}
+          <div className="block sm:hidden divide-y divide-gray-100">
+            {items.map((item, index) => (
+              <div key={index} className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Item {index + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    disabled={items.length === 1}
+                    className="p-2 rounded text-gray-400 hover:text-red-500 disabled:opacity-30"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => updateItem(index, "description", e.target.value)}
+                    placeholder="Item description"
+                    className="w-full rounded border border-gray-300 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 px-3 py-2"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full rounded border border-gray-300 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Rate ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.rate}
+                      onChange={(e) => updateItem(index, "rate", parseFloat(e.target.value) || 0)}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full rounded border border-gray-300 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                  <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 text-sm font-medium text-gray-900">
+                    {formatCurrency(item.amount)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: existing table (hidden below sm) */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
@@ -217,6 +283,7 @@ export function InvoiceForm({ clients, invoice, mode }: InvoiceFormProps) {
                         min="1"
                         value={item.quantity}
                         onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
+                        onFocus={(e) => e.target.select()}
                         className="w-full text-right rounded border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 px-1 py-1"
                       />
                     </td>
@@ -227,6 +294,7 @@ export function InvoiceForm({ clients, invoice, mode }: InvoiceFormProps) {
                         step="0.01"
                         value={item.rate}
                         onChange={(e) => updateItem(index, "rate", parseFloat(e.target.value) || 0)}
+                        onFocus={(e) => e.target.select()}
                         className="w-full text-right rounded border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 px-1 py-1"
                       />
                     </td>
