@@ -11,15 +11,15 @@ import { validateGstin } from "@/lib/tax/gst";
 import { STATE_OPTIONS, INDIAN_STATES } from "@/lib/tax/states";
 
 export interface UserSettings {
-  name?: string;
-  email?: string;
-  company?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  country?: string;
+  name?: string | null;
+  email?: string | null;
+  company?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  country?: string | null;
   logoUrl?: string;
   gstin?: string | null;
   gstStateCode?: string | null;
