@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { clientGstDetailsSchema } from "@/lib/validations/gst";
 
-export const createClientSchema = z.object({
+const clientBaseSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  email: z.email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().optional(),
   company: z.string().optional(),
   address: z.string().optional(),
@@ -11,6 +12,8 @@ export const createClientSchema = z.object({
   zip: z.string().optional(),
   country: z.string().optional(),
 });
+
+export const createClientSchema = clientBaseSchema.extend(clientGstDetailsSchema.shape);
 
 export const updateClientSchema = createClientSchema.partial();
 

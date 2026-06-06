@@ -29,7 +29,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
       userId,
       ...(activeStatus !== "ALL" ? { status: activeStatus as InvoiceStatus } : {}),
     },
-    include: { client: true, items: true },
+    include: { client: { select: { id: true, name: true, company: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -66,7 +66,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
       </div>
 
       <Card>
-        <InvoiceTable invoices={serialize(invoices) as InvoiceWithDetails[]} />
+        <InvoiceTable invoices={serialize(invoices) as unknown as InvoiceWithDetails[]} />
       </Card>
     </div>
   );

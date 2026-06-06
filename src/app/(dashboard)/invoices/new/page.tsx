@@ -12,10 +12,13 @@ export default async function NewInvoicePage() {
   const session = await auth();
   const userId = session!.user!.id!;
 
-  const clients = await prisma.client.findMany({
-    where: { userId },
-    orderBy: { name: "asc" },
-  });
+  const [clients, seller] = await Promise.all([
+    prisma.client.findMany({ where: { userId }, orderBy: { name: "asc" } }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { gstin: true, gstStateCode: true },
+    }),
+  ]);
 
   if (clients.length === 0) {
     redirect("/clients/new?from=invoice");
@@ -35,7 +38,12 @@ export default async function NewInvoicePage() {
         <span className="text-sm font-medium text-gray-900">New Invoice</span>
       </div>
       <h1 className="text-2xl font-bold text-gray-900">Create Invoice</h1>
-      <InvoiceForm clients={clients} mode="create" />
+      <InvoiceForm
+        clients={clients}
+        mode="create"
+        sellerStateCode={seller?.gstStateCode ?? null}
+        sellerGstin={seller?.gstin ?? null}
+      />
     </div>
   );
 }

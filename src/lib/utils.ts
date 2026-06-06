@@ -34,18 +34,6 @@ export interface InvoiceItemInput {
   rate: number;
 }
 
-export function calculateTotals(
-  items: InvoiceItemInput[],
-  taxRate: number,
-  discount: number
-): { subtotal: number; taxAmount: number; total: number } {
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
-  const discountedSubtotal = subtotal - discount;
-  const taxAmount = (discountedSubtotal * taxRate) / 100;
-  const total = discountedSubtotal + taxAmount;
-  return { subtotal, taxAmount, total: Math.max(0, total) };
-}
-
 /**
  * Recursively converts Prisma Decimal objects and Date objects to plain
  * serializable values (number / string) so they can safely cross the

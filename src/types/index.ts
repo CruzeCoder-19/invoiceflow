@@ -42,6 +42,7 @@ export interface InvoiceFormItem {
   quantity: number;
   rate: number;
   amount: number;
+  gstRatePct: number;
 }
 
 export interface InvoiceFormData {
@@ -49,9 +50,11 @@ export interface InvoiceFormData {
   status: InvoiceStatus;
   issueDate: string;
   dueDate: string;
-  taxRate: number;
   discount: number;
   notes: string;
   terms: string;
   items: InvoiceFormItem[];
+  supplyType?: string;
+  supplyTypeOverridden?: boolean;
+  placeOfSupply?: string;
 }

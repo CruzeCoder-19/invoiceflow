@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { updateClientSchema } from "@/lib/validations/client";
+import { INDIAN_STATES } from "@/lib/tax/states";
 
 async function getClientOrFail(id: string, userId: string) {
   return prisma.client.findFirst({
@@ -54,16 +56,33 @@ export async function PUT(
       );
     }
 
-    const client = await prisma.client.update({
-      where: { id },
-      data: {
-        ...parsed.data,
-        ...(parsed.data.email !== undefined ? { email: parsed.data.email || null } : {}),
-      },
-    });
+    const { gstin, gstStateCode, gstStateName, isBusiness: _ignored, ...rest } = parsed.data;
+
+    const data: Prisma.ClientUpdateInput = {
+      ...rest,
+      ...(rest.email !== undefined ? { email: rest.email || null } : {}),
+    };
+
+    // Only update GST fields when explicitly present in the payload.
+    // undefined means the key was absent — don't wipe existing values.
+    if (gstin !== undefined) {
+      data.gstin = gstin ?? null;
+      // isBusiness always reflects the current gstin state
+      data.isBusiness = !!gstin;
+    }
+    if (gstStateCode !== undefined) {
+      data.gstStateCode = gstStateCode ?? null;
+      const resolvedStateName =
+        gstStateName?.trim() ||
+        (gstStateCode ? (INDIAN_STATES[gstStateCode] ?? null) : null);
+      data.gstStateName = resolvedStateName ?? null;
+    }
+
+    const client = await prisma.client.update({ where: { id }, data });
 
     return NextResponse.json({ data: client });
-  } catch {
+  } catch (e) {
+    console.error("[PUT /api/clients/:id]", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

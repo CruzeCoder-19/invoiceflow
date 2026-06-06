@@ -15,12 +15,16 @@ export default async function EditInvoicePage({ params }: PageProps) {
   const userId = session!.user!.id!;
   const { id } = await params;
 
-  const [invoice, clients] = await Promise.all([
+  const [invoice, clients, seller] = await Promise.all([
     prisma.invoice.findFirst({
       where: { id, userId },
       include: { items: true },
     }),
     prisma.client.findMany({ where: { userId }, orderBy: { name: "asc" } }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { gstin: true, gstStateCode: true },
+    }),
   ]);
 
   if (!invoice) notFound();
@@ -39,7 +43,13 @@ export default async function EditInvoicePage({ params }: PageProps) {
         <span className="text-sm font-medium text-gray-900">Edit</span>
       </div>
       <h1 className="text-2xl font-bold text-gray-900">Edit Invoice</h1>
-      <InvoiceForm clients={serialize(clients)} invoice={serialize(invoice)} mode="edit" />
+      <InvoiceForm
+        clients={serialize(clients)}
+        invoice={serialize(invoice)}
+        mode="edit"
+        sellerStateCode={seller?.gstStateCode ?? null}
+        sellerGstin={seller?.gstin ?? null}
+      />
     </div>
   );
 }

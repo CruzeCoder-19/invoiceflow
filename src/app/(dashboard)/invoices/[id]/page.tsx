@@ -8,6 +8,7 @@ import { InvoiceStatusBadge } from "@/components/invoices/InvoiceStatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/Card";
 import { MarkPaidButton } from "@/components/invoices/MarkPaidButton";
+import { getStateName } from "@/lib/tax/states";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,6 +25,33 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
   });
 
   if (!invoice) notFound();
+
+  // ── Derived values ─────────────────────────────────────────────────────
+  const isLegacy = invoice.supplyType === null;
+  const isTaxInvoice = invoice.documentType === "TAX_INVOICE";
+  const isIntra = invoice.supplyType === "INTRA_STATE";
+  const isInter = invoice.supplyType === "INTER_STATE";
+
+  // Tax totals summed from per-line amounts (not from invoice.taxAmount which is the aggregate)
+  const cgstTotal = invoice.items.reduce((s, i) => s + Number(i.cgstAmount), 0);
+  const sgstTotal = invoice.items.reduce((s, i) => s + Number(i.sgstAmount), 0);
+  const igstTotal = invoice.items.reduce((s, i) => s + Number(i.igstAmount), 0);
+
+  // Snapshots — what was true when this invoice was issued
+  const sellerGstin = invoice.sellerGstinSnapshot;
+  const sellerState = invoice.sellerStateSnapshot;
+  const buyerGstin = invoice.buyerGstinSnapshot;
+  const buyerState = invoice.buyerStateSnapshot;
+
+  const placeOfSupplyLabel = invoice.placeOfSupply
+    ? `${invoice.placeOfSupply} — ${getStateName(invoice.placeOfSupply) ?? invoice.placeOfSupply}`
+    : null;
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+  function stateLabel(code: string | null) {
+    if (!code) return null;
+    return `${code} — ${getStateName(code) ?? code}`;
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -62,8 +90,10 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
       {/* Invoice Card */}
       <Card>
         <CardContent className="p-4 sm:p-8">
-          {/* Header */}
+
+          {/* ── Document header ──────────────────────────────────────────── */}
           <div className="flex items-start justify-between mb-8">
+            {/* Seller block */}
             <div>
               {invoice.user?.logoUrl && (
                 <img
@@ -76,15 +106,44 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
                 {invoice.user?.company ?? "InvoiceDo"}
               </p>
               {invoice.user && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-0.5">
                   {[invoice.user.address, invoice.user.city, invoice.user.state]
                     .filter(Boolean)
                     .join(", ")}
                 </p>
               )}
+              {/* Seller GST info (snapshot) — shown for non-legacy invoices */}
+              {!isLegacy && (
+                <div className="mt-1.5 text-xs text-gray-500 space-y-0.5">
+                  <p>
+                    <span className="font-medium">GSTIN: </span>
+                    {sellerGstin ?? "—"}
+                  </p>
+                  {invoice.user?.pan && (
+                    <p>
+                      <span className="font-medium">PAN: </span>
+                      {invoice.user.pan}
+                    </p>
+                  )}
+                  {sellerState && (
+                    <p>
+                      <span className="font-medium">State: </span>
+                      {stateLabel(sellerState)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Document title block */}
             <div className="text-right">
-              <p className="text-3xl font-extrabold text-gray-900">INVOICE</p>
+              <p className="text-3xl font-extrabold text-gray-900">
+                {isLegacy
+                  ? "INVOICE"
+                  : invoice.documentType === "BILL_OF_SUPPLY"
+                    ? "BILL OF SUPPLY"
+                    : "TAX INVOICE"}
+              </p>
               <p className="text-gray-500 mt-1">{invoice.invoiceNumber}</p>
               <div className="mt-2">
                 <InvoiceStatusBadge status={invoice.status} />
@@ -92,8 +151,9 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Bill To + Dates */}
+          {/* ── Bill To + Dates + GST meta ───────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8">
+            {/* Buyer */}
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
                 Bill To
@@ -110,7 +170,24 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
               {invoice.client.email && (
                 <p className="text-sm text-gray-500">{invoice.client.email}</p>
               )}
+              {/* Buyer GST info (snapshot) */}
+              {!isLegacy && (
+                <div className="mt-1.5 text-xs text-gray-500 space-y-0.5">
+                  <p>
+                    <span className="font-medium">GSTIN: </span>
+                    {buyerGstin ?? "N/A"}
+                  </p>
+                  {buyerState && (
+                    <p>
+                      <span className="font-medium">State: </span>
+                      {stateLabel(buyerState)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Dates + GST meta */}
             <div className="text-right">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
                 Details
@@ -124,18 +201,47 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
                   <span className="text-gray-500">Due Date: </span>
                   <span className="font-medium">{formatDate(invoice.dueDate)}</span>
                 </div>
+                {!isLegacy && placeOfSupplyLabel && (
+                  <div>
+                    <span className="text-gray-500">Place of Supply: </span>
+                    <span className="font-medium">{placeOfSupplyLabel}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Items */}
+          {/* ── Legacy banner ────────────────────────────────────────────── */}
+          {isLegacy && (
+            <div className="mb-4 rounded-lg bg-gray-100 border border-gray-200 px-4 py-2.5 text-sm text-gray-500">
+              Legacy invoice — no GST breakdown available
+            </div>
+          )}
+
+          {/* ── Line Items ───────────────────────────────────────────────── */}
           <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
             <table className="w-full text-sm mb-6">
               <thead>
                 <tr className="border-y border-gray-200 bg-gray-50">
                   <th className="text-left py-2.5 px-3 font-semibold text-gray-600">Description</th>
-                  <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-16">Qty</th>
-                  <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-28">Rate</th>
+                  <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-12">Qty</th>
+                  <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-24">Rate</th>
+                  {/* GST columns — only for non-legacy TAX_INVOICE */}
+                  {!isLegacy && isTaxInvoice && (
+                    <>
+                      <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-24">Taxable</th>
+                      <th className="text-center py-2.5 px-3 font-semibold text-gray-600 w-14">GST%</th>
+                      {isIntra && (
+                        <>
+                          <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-20">CGST</th>
+                          <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-20">SGST</th>
+                        </>
+                      )}
+                      {isInter && (
+                        <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-20">IGST</th>
+                      )}
+                    </>
+                  )}
                   <th className="text-right py-2.5 px-3 font-semibold text-gray-600 w-28">Amount</th>
                 </tr>
               </thead>
@@ -144,17 +250,46 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
                   <tr key={item.id}>
                     <td className="py-3 px-3 text-gray-700">{item.description}</td>
                     <td className="py-3 px-3 text-right text-gray-600">{item.quantity}</td>
-                    <td className="py-3 px-3 text-right text-gray-600">{formatCurrency(Number(item.rate))}</td>
-                    <td className="py-3 px-3 text-right font-medium text-gray-900">{formatCurrency(Number(item.amount))}</td>
+                    <td className="py-3 px-3 text-right text-gray-600">
+                      {formatCurrency(Number(item.rate))}
+                    </td>
+                    {!isLegacy && isTaxInvoice && (
+                      <>
+                        <td className="py-3 px-3 text-right text-gray-600">
+                          {formatCurrency(Number(item.taxableValue))}
+                        </td>
+                        <td className="py-3 px-3 text-center text-gray-600">
+                          {item.gstRatePct}%
+                        </td>
+                        {isIntra && (
+                          <>
+                            <td className="py-3 px-3 text-right text-gray-600">
+                              {formatCurrency(Number(item.cgstAmount))}
+                            </td>
+                            <td className="py-3 px-3 text-right text-gray-600">
+                              {formatCurrency(Number(item.sgstAmount))}
+                            </td>
+                          </>
+                        )}
+                        {isInter && (
+                          <td className="py-3 px-3 text-right text-gray-600">
+                            {formatCurrency(Number(item.igstAmount))}
+                          </td>
+                        )}
+                      </>
+                    )}
+                    <td className="py-3 px-3 text-right font-medium text-gray-900">
+                      {formatCurrency(Number(item.amount))}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* Totals */}
+          {/* ── Totals ───────────────────────────────────────────────────── */}
           <div className="flex justify-end">
-            <div className="w-full sm:w-56 sm:ml-auto space-y-1.5 text-sm">
+            <div className="w-full sm:w-64 sm:ml-auto space-y-1.5 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
                 <span>{formatCurrency(Number(invoice.subtotal))}</span>
@@ -165,12 +300,35 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
                   <span>-{formatCurrency(Number(invoice.discount))}</span>
                 </div>
               )}
-              {Number(invoice.taxRate) > 0 && (
+
+              {/* Legacy: single tax line */}
+              {isLegacy && Number(invoice.taxRate) > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>Tax ({Number(invoice.taxRate)}%)</span>
                   <span>{formatCurrency(Number(invoice.taxAmount))}</span>
                 </div>
               )}
+
+              {/* GST: per-component tax lines */}
+              {!isLegacy && isTaxInvoice && isIntra && (
+                <>
+                  <div className="flex justify-between text-gray-600">
+                    <span>CGST</span>
+                    <span>{formatCurrency(cgstTotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>SGST</span>
+                    <span>{formatCurrency(sgstTotal)}</span>
+                  </div>
+                </>
+              )}
+              {!isLegacy && isTaxInvoice && isInter && (
+                <div className="flex justify-between text-gray-600">
+                  <span>IGST</span>
+                  <span>{formatCurrency(igstTotal)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-bold text-gray-900">
                 <span>Total</span>
                 <span>{formatCurrency(Number(invoice.total))}</span>
@@ -178,7 +336,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Notes & Terms */}
+          {/* ── Notes & Terms ────────────────────────────────────────────── */}
           {(invoice.notes || invoice.terms) && (
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 border-t border-gray-200 pt-6">
               {invoice.notes && (
@@ -195,6 +353,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
               )}
             </div>
           )}
+
         </CardContent>
       </Card>
     </div>

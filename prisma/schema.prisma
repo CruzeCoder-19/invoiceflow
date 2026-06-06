@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -26,6 +26,11 @@ model User {
   zip            String?
   country        String?
   logoUrl        String?
+  // GST details (seller / registered business)
+  gstin          String?
+  gstStateCode   String?
+  gstStateName   String?
+  pan            String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -33,6 +38,9 @@ model User {
   sessions Session[]
   invoices Invoice[]
   clients  Client[]
+
+  @@index([gstin])
+  @@index([pan])
 }
 
 model Account {
@@ -72,22 +80,30 @@ model VerificationToken {
 }
 
 model Client {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  email     String?
-  phone     String?
-  company   String?
-  address   String?
-  city      String?
-  state     String?
-  zip       String?
-  country   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  email        String?
+  phone        String?
+  company      String?
+  address      String?
+  city         String?
+  state        String?
+  zip          String?
+  country      String?
+  // GST details (buyer)
+  gstin        String?
+  gstStateCode String?
+  gstStateName String?
+  isBusiness   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   invoices Invoice[]
+
+  @@index([userId])
+  @@index([gstin])
 }
 
 enum InvoiceStatus {
@@ -98,38 +114,68 @@ enum InvoiceStatus {
   CANCELLED
 }
 
+enum SupplyType {
+  INTRA_STATE
+  INTER_STATE
+}
+
+enum DocumentType {
+  TAX_INVOICE
+  BILL_OF_SUPPLY
+}
+
 model Invoice {
-  id            String        @id @default(cuid())
-  invoiceNumber String
-  userId        String
-  clientId      String
-  status        InvoiceStatus @default(DRAFT)
-  issueDate     DateTime      @default(now())
-  dueDate       DateTime
-  subtotal      Decimal       @db.Decimal(10, 2)
-  taxRate       Decimal       @default(0) @db.Decimal(5, 2)
-  taxAmount     Decimal       @default(0) @db.Decimal(10, 2)
-  discount      Decimal       @default(0) @db.Decimal(10, 2)
-  total         Decimal       @db.Decimal(10, 2)
-  notes         String?       @db.Text
-  terms         String?       @db.Text
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id                   String        @id @default(cuid())
+  invoiceNumber        String
+  userId               String
+  clientId             String
+  status               InvoiceStatus @default(DRAFT)
+  issueDate            DateTime      @default(now())
+  dueDate              DateTime
+  subtotal             Decimal       @db.Decimal(10, 2)
+  taxRate              Decimal       @default(0) @db.Decimal(5, 2)
+  taxAmount            Decimal       @default(0) @db.Decimal(10, 2)
+  discount             Decimal       @default(0) @db.Decimal(10, 2)
+  total                Decimal       @db.Decimal(10, 2)
+  notes                String?       @db.Text
+  terms                String?       @db.Text
+  // GST fields — null means legacy invoice (pre-GST upgrade)
+  supplyType           SupplyType?
+  placeOfSupply        String?
+  supplyTypeOverridden Boolean       @default(false)
+  documentType         DocumentType  @default(TAX_INVOICE)
+  sellerGstinSnapshot  String?
+  buyerGstinSnapshot   String?
+  sellerStateSnapshot  String?
+  buyerStateSnapshot   String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
   user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   client Client        @relation(fields: [clientId], references: [id])
   items  InvoiceItem[]
 
   @@unique([userId, invoiceNumber])
+  @@index([userId, status])
+  @@index([supplyType])
+  @@index([documentType])
 }
 
 model InvoiceItem {
-  id          String  @id @default(cuid())
-  invoiceId   String
-  description String
-  quantity    Int     @default(1)
-  rate        Decimal @db.Decimal(10, 2)
-  amount      Decimal @db.Decimal(10, 2)
+  id           String  @id @default(cuid())
+  invoiceId    String
+  description  String
+  quantity     Int     @default(1)
+  rate         Decimal @db.Decimal(10, 2)
+  amount       Decimal @db.Decimal(10, 2)
+  // GST breakdown — all default to 0 for backward compat
+  taxableValue Decimal @default(0) @db.Decimal(10, 2)
+  gstRatePct   Int     @default(18)
+  cgstAmount   Decimal @default(0) @db.Decimal(10, 2)
+  sgstAmount   Decimal @default(0) @db.Decimal(10, 2)
+  igstAmount   Decimal @default(0) @db.Decimal(10, 2)
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
 }

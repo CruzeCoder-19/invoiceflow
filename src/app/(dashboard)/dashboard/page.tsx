@@ -4,55 +4,85 @@ import { prisma } from "@/lib/prisma";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { RecentInvoices } from "@/components/dashboard/RecentInvoices";
-import { startOfMonth, subMonths, format } from "date-fns";
 import type { DashboardStats, MonthlyRevenue, InvoiceWithDetails } from "@/types";
 import { serialize } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard — InvoiceDo" };
 
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+// pg driver returns NUMERIC columns as strings
+type MonthRow = { year: number; month_num: number; revenue: string; paid: string; };
+
 export default async function DashboardPage() {
   const session = await auth();
   const userId = session!.user!.id!;
 
-  const [invoices, clientCount] = await Promise.all([
+  // Four parallel queries replace the old unbounded findMany + O(12n) JS loops.
+  // createdAt is TIMESTAMP(3) without time zone — double-cast for correct UTC→IST conversion.
+  const [statusGroups, clientCount, rawMonthly, recentInvoices] = await Promise.all([
+    prisma.invoice.groupBy({
+      by: ["status"],
+      where: { userId },
+      _sum: { total: true },
+      _count: { id: true },
+    }),
+    prisma.client.count({ where: { userId } }),
+    prisma.$queryRaw<MonthRow[]>`
+      SELECT
+        EXTRACT(YEAR  FROM ("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Kolkata')::int AS year,
+        EXTRACT(MONTH FROM ("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Kolkata')::int AS month_num,
+        SUM(total)                                            AS revenue,
+        SUM(CASE WHEN status = 'PAID' THEN total ELSE 0 END) AS paid
+      FROM "Invoice"
+      WHERE "userId" = ${userId}
+        AND (("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Kolkata')
+            >= DATE_TRUNC('month', NOW() AT TIME ZONE 'Asia/Kolkata' - INTERVAL '5 months')
+      GROUP BY 1, 2
+      ORDER BY 1, 2
+    `,
     prisma.invoice.findMany({
       where: { userId },
       include: { client: true, items: true },
       orderBy: { createdAt: "desc" },
+      take: 5,
     }),
-    prisma.client.count({ where: { userId } }),
   ]);
 
-  const sumTotal = (list: typeof invoices): number => {
-    let sum = 0;
-    for (const inv of list) sum += Number(inv.total);
-    return sum;
-  };
+  const byStatus: Record<string, number> = {};
+  let totalInvoices = 0;
+  for (const g of statusGroups) {
+    byStatus[g.status] = Number(g._sum.total ?? 0);
+    totalInvoices += g._count.id;
+  }
 
   const stats: DashboardStats = {
-    totalRevenue: sumTotal(invoices),
-    paidAmount: sumTotal(invoices.filter((i) => i.status === "PAID")),
-    outstandingAmount: sumTotal(invoices.filter((i) => i.status === "SENT")),
-    overdueAmount: sumTotal(invoices.filter((i) => i.status === "OVERDUE")),
-    totalInvoices: invoices.length,
+    totalRevenue: Object.values(byStatus).reduce((s, v) => s + v, 0),
+    paidAmount: byStatus["PAID"] ?? 0,
+    outstandingAmount: byStatus["SENT"] ?? 0,
+    overdueAmount: byStatus["OVERDUE"] ?? 0,
+    totalInvoices,
     totalClients: clientCount,
   };
 
-  const monthlyRevenue: MonthlyRevenue[] = [];
-  for (let idx = 5; idx >= 0; idx--) {
-    const monthStart = startOfMonth(subMonths(new Date(), idx));
-    const monthEnd = startOfMonth(subMonths(new Date(), idx - 1));
-    const monthInvoices = invoices.filter(
-      (inv) => inv.createdAt >= monthStart && inv.createdAt < monthEnd
-    );
-    monthlyRevenue.push({
-      month: format(monthStart, "MMM yy"),
-      revenue: sumTotal(monthInvoices),
-      paid: sumTotal(monthInvoices.filter((inv) => inv.status === "PAID")),
-    });
+  const monthMap = new Map<string, { revenue: number; paid: number }>();
+  for (const r of rawMonthly) {
+    monthMap.set(`${r.year}-${r.month_num}`, { revenue: Number(r.revenue), paid: Number(r.paid) });
   }
 
-  const recentInvoices = invoices.slice(0, 5) as InvoiceWithDetails[];
+  const nowIST   = new Date(Date.now() + IST_OFFSET_MS);
+  const curYear  = nowIST.getUTCFullYear();
+  const curMonth = nowIST.getUTCMonth();
+
+  const monthlyRevenue: MonthlyRevenue[] = [];
+  for (let i = 5; i >= 0; i--) {
+    let m = curMonth - i;
+    let y = curYear;
+    if (m < 0) { m += 12; y -= 1; }
+    const data = monthMap.get(`${y}-${m + 1}`) ?? { revenue: 0, paid: 0 };
+    monthlyRevenue.push({ month: `${MONTH_NAMES[m]} ${String(y).slice(-2)}`, ...data });
+  }
 
   return (
     <div className="space-y-6">
